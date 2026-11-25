@@ -1,0 +1,20 @@
+default_permissions = "workshop"
+
+[approval_policy.granular]
+mcp_elicitations = true
+sandbox_approval = false
+rules = false
+request_permissions = false
+skill_approval = false
+
+[permissions.workshop.filesystem]
+":minimal" = "read"
+":workspace_roots" = "read"
+
+[mcp_servers.hr-naive]
+url = "http://localhost:8001/mcp"
+enabled = false
+
+[mcp_servers.hr-secure]
+url = "http://localhost:8000/mcp"
+enabled = true

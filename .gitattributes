@@ -1,0 +1,6 @@
+# Shell- und SQL-Skripte laufen in Linux-Containern: immer LF-Zeilenenden,
+# auch wenn das Repository unter Windows ausgecheckt wird (sonst bricht Postgres beim Init ab).
+*.sh   text eol=lf
+*.sql  text eol=lf
+*.py   text eol=lf
+Dockerfile text eol=lf

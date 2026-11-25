@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "deny": [
+      "Read(../infra/**)",
+      "Edit(../infra/**)",
+      "Bash(docker *)"
+    ]
+  }
+}

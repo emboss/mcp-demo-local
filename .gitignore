@@ -1,0 +1,5 @@
+# Echte Zugangsdaten nie einchecken
+infra/.env
+__pycache__/
+*.pyc
+.venv/

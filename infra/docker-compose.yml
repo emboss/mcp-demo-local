@@ -1,0 +1,56 @@
+# HR-Demo: Datenbank + zwei MCP-Server (naiv und gehärtet).
+# Start:  docker compose up -d --build      (im Ordner infra/, vorher .env anlegen - siehe README)
+# Reset:  docker compose down -v            (löscht Datenbank und Audit-Log)
+
+name: hr-demo
+
+services:
+  db:
+    image: postgres:17
+    environment:
+      POSTGRES_DB: hr
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Bitte infra/.env anlegen (siehe README)}
+      HR_MCP_DB_PASSWORD: ${HR_MCP_DB_PASSWORD:?Bitte infra/.env anlegen (siehe README)}
+    volumes:
+      - ./db/init:/docker-entrypoint-initdb.d:ro
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d hr"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+    # Bewusst KEIN "ports:" - die Datenbank ist nur im internen Docker-Netz erreichbar.
+
+  # Gehärteter Server: eingeschränkte Rolle hr_mcp, zweckgebundene Tools, Audit-Log.
+  hr-secure:
+    build: ../servers
+    command: ["python", "secure_server.py"]
+    environment:
+      DATABASE_URL: postgresql://hr_mcp:${HR_MCP_DB_PASSWORD}@db:5432/hr
+    ports:
+      # nur vom eigenen Rechner erreichbar, nicht aus dem Seminar-WLAN.
+      # Port belegt? In infra/.env z. B. HR_SECURE_PORT=8100 setzen (und die URL im Client anpassen).
+      - "127.0.0.1:${HR_SECURE_PORT:-8000}:8000"
+    volumes:
+      - audit:/audit
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+
+  # Naiver Server: Superuser, freies SQL. Nur für Akt 1!
+  hr-naive:
+    build: ../servers
+    command: ["python", "naive_server.py"]
+    environment:
+      DATABASE_URL: postgresql://postgres:${POSTGRES_PASSWORD}@db:5432/hr
+    ports:
+      - "127.0.0.1:${HR_NAIVE_PORT:-8001}:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  pgdata:
+  audit:
